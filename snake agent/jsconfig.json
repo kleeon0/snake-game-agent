@@ -1,10 +1,10 @@
 {
-  "compilerOptions": {
-    "target": "es6"
-  },
-  "include": [
-    "*.js",
-    "**/*.js",
-    "c:\\Users\\Creon\\.vscode\\extensions\\samplavigne.p5-vscode-1.2.16\\p5types\\global.d.ts"
-  ]
+    "compilerOptions": {
+        "target": "es6"
+    },
+    "include": [
+        "*.js",
+        "**/*.js",
+        "c:\\Users\\Creon\\.vscode\\extensions\\samplavigne.p5-vscode-1.2.16\\p5types\\global.d.ts"
+    ]
 }

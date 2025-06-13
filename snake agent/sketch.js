@@ -1,29 +1,26 @@
 var s;
 var scl = 20;
 
-var food;
+function setup() {
+    createCanvas(600, 600);
+    frameRate(10);
 
-
-function setup(){
-  createCanvas(600, 600);
-  s = new Snake();
-  frameRate(10);
-  pickLocation();
+    s = new Snake();
+    generateFoodLocation();
 }
 
-function draw(){
-  background(51);
+function draw() {
+    background(51);
 
-  if (s.eat(food)){
-    pickLocation();
-  }
+    if (s.eat(food)) {
+        generateFoodLocation();
+    }
 
-  s.death();
-  s.update();
-  s.show();
+    s.think();
+    s.death();
+    s.update();
+    s.show();
 
-  
-
-  fill(255, 0, 100);
-  rect(food.x, food.y, scl, scl);
+    fill(255, 0, 100);
+    rect(food.x, food.y, scl, scl);
 }
