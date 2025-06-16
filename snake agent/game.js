@@ -1,9 +1,7 @@
-var food;
 function generateFoodLocation() {
     var cols = floor(width / scl);
     var rows = floor(height / scl);
-    food = createVector(floor(random(cols)), floor(random(rows)));
-    food.mult(scl);
+    return createVector(floor(random(cols)), floor(random(rows))).mult(scl);
 }
 
 // function keyPressed() {
@@ -19,9 +17,10 @@ function generateFoodLocation() {
 // }
 
 class Snake {
-    constructor() {
-        this.x = 0;
-        this.y = 0;
+    constructor(x, y, food_pos, brain) {
+        this.food = food_pos;
+        this.x = x;
+        this.y = y;
         this.xspeed = 1;
         this.yspeed = 0;
         this.total = 0;
@@ -33,7 +32,13 @@ class Snake {
         //      16 nodes in a single layer (constrained by the neural network configuration we're using)
         // output nodes:
         //      up, down, left, right
-        this.brain = new NeuralNetwork(9, 16, 4);
+        if (brain) {
+            this.brain = brain.copy();
+        } else {
+            this.brain = new NeuralNetwork(9, 16, 4);
+        }
+        this.score = 0;
+        this.fitness = 0;
     }
 
     think() {
@@ -43,7 +48,7 @@ class Snake {
             this.tail.length > 0 ? this.tail[0].x : this.x, this.tail.length > 0 ? this.tail[0].y : this.y,
             this.xspeed, this.yspeed,
             this.total,
-            food.x, food.y
+            this.food.x, this.food.y
         ];
 
         // Getting the neural networks's output layer
@@ -70,6 +75,10 @@ class Snake {
         }
     }
 
+    mutate(val) {
+        this.brain.mutate(val);
+    }
+
     update() {
         if (this.total === this.tail.length) {
             for (var i = 0; i < this.tail.length - 1; i++) {
@@ -80,13 +89,10 @@ class Snake {
         this.tail[this.total - 1] = createVector(this.x, this.y);
         this.x = this.x + this.xspeed * scl;
         this.y = this.y + this.yspeed * scl;
-
-        this.x = constrain(this.x, 0, width - scl);
-        this.y = constrain(this.y, 0, height - scl);
     }
 
-    eat(pos) {
-        var d = dist(this.x, this.y, pos.x, pos.y);
+    eat() {
+        var d = dist(this.x, this.y, this.food.x, this.food.y);
 
         if (d < 1) {
             this.total++;
@@ -97,25 +103,32 @@ class Snake {
         }
     }
 
-    death() {
+    detectDeath() {
+        // Check if it collides with it's tail
         for (var i = 0; i < this.tail.length; i++) {
             var pos = this.tail[i];
             var d = dist(this.x, this.y, pos.x, pos.y);
             if (d < 1) {
-                this.total = 0;
-                this.tail = [];
-                this.xspeed = 1;
-                this.yspeed = 0;
-                this.x = 0;
-                this.y = 0;
+                // this.total = 0;
+                // this.tail = [];
+                // this.xspeed = 1;
+                // this.yspeed = 0;
+                // this.x = 0;
+                // this.y = 0;
 
+                return true;
             }
         }
 
+        // Check if it collides with a wall
         if (this.x < 0 || this.x > width - scl || this.y < 0 || this.y > height - scl) {
-            this.total = 0;
-            this.tail = [];
+            // this.total = 0;
+            // this.tail = [];
+
+            return true;
         }
+
+        return false;
     }
 
     dir(x, y) {
@@ -152,10 +165,25 @@ class Snake {
     }
 
     show() {
-        fill(255);
+        fill(255, 255, 255, 100);
+
         for (var i = 0; i < this.tail.length; i++) {
             rect(this.tail[i].x, this.tail[i].y, scl, scl);
         }
+
         rect(this.x, this.y, scl, scl);
+    }
+
+    drawFood() {
+        fill(255, 0, 100);
+        rect(this.food.x, this.food.y, scl, scl);
+    }
+
+    // underconstruction
+    movingTowards() {
+        if (this.x + this.xspeed - this.food.x < this.x - this.food.x || this.y + this.yspeed - this.food.y < this.y - this.food.y) {
+            return false;
+        }
+        return true;
     }
 }
