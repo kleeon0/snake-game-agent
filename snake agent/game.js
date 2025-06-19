@@ -25,20 +25,20 @@ class Snake {
         this.yspeed = 0;
         this.total = 0;
         this.tail = [];
+        this.score = 0;
+        this.fitness = 0;
 
-        // input nodes:
-        //      head_x, head_y, tail_x, tail_y, x_speed, y_speed, total, food_x, food_y
-        // hidden nodes:
-        //      16 nodes in a single layer (constrained by the neural network configuration we're using)
-        // output nodes:
-        //      up, down, left, right
         if (brain) {
             this.brain = brain.copy();
         } else {
+            // input nodes:
+            //      head_x, head_y, tail_x, tail_y, x_speed, y_speed, total, food_x, food_y
+            // hidden nodes:
+            //      16 nodes in a single layer (constrained by the neural network configuration we're using)
+            // output nodes:
+            //      up, down, left, right
             this.brain = new NeuralNetwork(9, 16, 4);
         }
-        this.score = 0;
-        this.fitness = 0;
     }
 
     think() {
@@ -79,6 +79,27 @@ class Snake {
         this.brain.mutate(val);
     }
 
+    updateScore() {
+        // If the snake eats the food
+        if (this.eat()) {
+            this.score += 1000;
+        }
+
+        // If the snake is closer to the food
+        // let distance = abs(dist(this.x, this.y, this.food.x, this.food.y));
+        // // map(value, range_1_min, range_1_max, range_2_min, range_2_max)
+        // // returns the resultant value that the input value would be mapped to
+        // this.score += map(constrain(distance, 0, 42), 0, 42, 50, -50);
+
+        // If the snake is moving towards the food
+        if (this.movingTowards()) {
+            this.score++;
+        }
+
+        // If the snake is alive
+        this.score -= frameCount / 100;
+    }
+
     update() {
         if (this.total === this.tail.length) {
             for (var i = 0; i < this.tail.length - 1; i++) {
@@ -109,22 +130,12 @@ class Snake {
             var pos = this.tail[i];
             var d = dist(this.x, this.y, pos.x, pos.y);
             if (d < 1) {
-                // this.total = 0;
-                // this.tail = [];
-                // this.xspeed = 1;
-                // this.yspeed = 0;
-                // this.x = 0;
-                // this.y = 0;
-
                 return true;
             }
         }
 
         // Check if it collides with a wall
         if (this.x < 0 || this.x > width - scl || this.y < 0 || this.y > height - scl) {
-            // this.total = 0;
-            // this.tail = [];
-
             return true;
         }
 

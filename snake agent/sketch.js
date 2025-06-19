@@ -25,22 +25,15 @@ function draw() {
     background(51);
 
     for (let s of snakes) {
-        if (s.eat()) {
-            generateFoodLocation();
-            s.score += 1000;
-        }
-
         s.think();
         s.update();
         s.show();
         s.drawFood();
+        s.updateScore();
 
-        // let d = abs(dist(s.x, s.y, s.food.x, s.food.y));
-        // map(value, range_1_min, range_1_max, range_2_min, range_2_max) returns the resultant value that the input value would be mapped to
-        // let mapped = map(constrain(d, 0, 42), 0, 42, 50, -50);
-        // s.score += mapped;
-
-        s.score -= frameCount / 100;
+        if (s.eat()) {
+            generateFoodLocation();
+        }
 
         for (let j = 0; j < total_snakes; j++) {
             if (snakes[j].detectDeath()) {
@@ -50,18 +43,10 @@ function draw() {
             }
         }
 
-        if(s.movingTowards()){
-            s.score++;
-        }
-
         if (frameCount >= 1000) {
             history.push(snakes[0])
             snakes.splice(0, 1);
             total_snakes--;
-        }
-
-        if (snakes.length == 1) {
-            console.log(snakes[0].score);
         }
     }
 
