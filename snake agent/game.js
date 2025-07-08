@@ -82,7 +82,7 @@ class Snake {
     updateScore() {
         // If the snake eats the food
         if (this.eat()) {
-            this.score += 1000;
+            this.score += 100;
         }
 
         // If the snake is closer to the food
@@ -97,19 +97,27 @@ class Snake {
         }
 
         // If the snake is alive
-        this.score -= frameCount / 100;
+        // this.score -= frameCount / 100;
     }
 
     update() {
-        if (this.total === this.tail.length) {
-            for (var i = 0; i < this.tail.length - 1; i++) {
-                this.tail[i] = this.tail[i + 1];
-            }
-        }
-
-        this.tail[this.total - 1] = createVector(this.x, this.y);
+        // Update position first
         this.x = this.x + this.xspeed * scl;
         this.y = this.y + this.yspeed * scl;
+
+        // Only update tail if we have segments
+        if (this.total > 0) {
+            // Shift tail segments
+            if (this.tail.length >= this.total) {
+                for (var i = 0; i < this.tail.length - 1; i++) {
+                    this.tail[i] = this.tail[i + 1];
+                }
+                this.tail[this.total - 1] = createVector(this.x, this.y);
+            } else {
+                // Add new tail segment
+                this.tail.push(createVector(this.x, this.y));
+            }
+        }
     }
 
     eat() {
@@ -124,18 +132,21 @@ class Snake {
         }
     }
 
-    detectDeath() {
+    detectDeath(w, h) {
         // Check if it collides with it's tail
         for (var i = 0; i < this.tail.length; i++) {
             var pos = this.tail[i];
-            var d = dist(this.x, this.y, pos.x, pos.y);
-            if (d < 1) {
-                return true;
+            // Check if tail segment exists and is properly defined
+            if (pos && pos.x !== undefined && pos.y !== undefined) {
+                var d = dist(this.x, this.y, pos.x, pos.y);
+                if (d < 1) {
+                    return true;
+                }
             }
         }
 
         // Check if it collides with a wall
-        if (this.x < 0 || this.x > width - scl || this.y < 0 || this.y > height - scl) {
+        if (this.x < 0 || this.x > w - scl || this.y < 0 || this.y > h - scl) {
             return true;
         }
 
@@ -178,8 +189,11 @@ class Snake {
     show() {
         fill(255, 255, 255, 100);
 
+        // Only draw tail segments that exist and are properly defined
         for (var i = 0; i < this.tail.length; i++) {
-            rect(this.tail[i].x, this.tail[i].y, scl, scl);
+            if (this.tail[i] && this.tail[i].x !== undefined && this.tail[i].y !== undefined) {
+                rect(this.tail[i].x, this.tail[i].y, scl, scl);
+            }
         }
 
         rect(this.x, this.y, scl, scl);
