@@ -20,3 +20,7 @@ This is a simple implementation of the classic Snake game using a genetic algori
 
 - A modern web browser with JavaScript support.
 - p5js library (included in the project).
+
+## License
+
+This project is open source and available under the MIT License. Feel free to modify and use the code as you wish.

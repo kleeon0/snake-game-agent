@@ -1,5 +1,4 @@
 // Other techniques for learning
-
 class ActivationFunction {
     constructor(func, dfunc) {
         this.func = func;
@@ -17,54 +16,66 @@ let tanh = new ActivationFunction(
     y => 1 - (y * y)
 );
 
-
 class NeuralNetwork {
-    // TODO: document what a, b, c are
-    constructor(a, b, c) {
+    // a is the number of input nodes
+    // b is the number of nodes in the hidden layer (there is only one hidden layer)
+    // c is the number of output nodes
+    constructor(a, b, c, d) {
         if (a instanceof NeuralNetwork) {
             this.input_nodes = a.input_nodes;
             this.hidden_nodes = a.hidden_nodes;
+            this.second_hidden =a.second_hidden;
             this.output_nodes = a.output_nodes;
 
-            this.weights_ih = a.weights_ih.copy();
-            this.weights_ho = a.weights_ho.copy();
+            this.weights_ih1 = a.weights_ih1.copy();
+            this.weights_h1h2 = a.weights_h1h2.copy();
+            this.weights_h2o = a.weights_h2o.copy();
 
-            this.bias_h = a.bias_h.copy();
+            this.bias_h1 = a.bias_h1.copy();
+            this.bias_h2 = a.bias_h2.copy();
             this.bias_o = a.bias_o.copy();
         } else {
             this.input_nodes = a;
             this.hidden_nodes = b;
+            this.second_hidden = b;
             this.output_nodes = c;
 
-            this.weights_ih = new Matrix(this.hidden_nodes, this.input_nodes);
-            this.weights_ho = new Matrix(this.output_nodes, this.hidden_nodes);
-            this.weights_ih.randomize();
-            this.weights_ho.randomize();
+            this.weights_ih1 = new Matrix(this.hidden_nodes, this.input_nodes);
+            this.weights_h1h2 = new Matrix(this.second_hidden, this.hidden_nodes);
+            this.weights_h2o = new Matrix(this.output_nodes, this.second_hidden);
+            this.weights_ih1.randomize();
+            this.weights_h1h2.randomize();
+            this.weights_h2o.randomize();
 
-            this.bias_h = new Matrix(this.hidden_nodes, 1);
+            this.bias_h1 = new Matrix(this.hidden_nodes, 1);
+            this.bias_h2 = new Matrix(this.second_hidden, 1);
             this.bias_o = new Matrix(this.output_nodes, 1);
-            this.bias_h.randomize();
+            this.bias_h1.randomize();
+            this.bias_h2.randomize();
             this.bias_o.randomize();
         }
 
         // TODO: copy these as well
         this.setLearningRate();
         this.setActivationFunction();
-
-
     }
 
     predict(input_array) {
-
         // Generating the Hidden Outputs
         let inputs = Matrix.fromArray(input_array);
-        let hidden = Matrix.multiply(this.weights_ih, inputs);
-        hidden.add(this.bias_h);
+        let hidden = Matrix.multiply(this.weights_ih1, inputs);
+        hidden.add(this.bias_h1);
         // activation function!
         hidden.map(this.activation_function.func);
 
+        //second hidden layer
+        let second_hidden = Matrix.multiply(this.weights_h1h2, hidden);
+        second_hidden.add(this.bias_h2);
+        // activation function!
+        second_hidden.map(this.activation_function.func);
+
         // Generating the output's output!
-        let output = Matrix.multiply(this.weights_ho, hidden);
+        let output = Matrix.multiply(this.weights_h2o, second_hidden);
         output.add(this.bias_o);
         output.map(this.activation_function.func);
 
@@ -81,15 +92,22 @@ class NeuralNetwork {
     }
 
     train(input_array, target_array) {
-        // Generating the Hidden Outputs
         let inputs = Matrix.fromArray(input_array);
-        let hidden = Matrix.multiply(this.weights_ih, inputs);
-        hidden.add(this.bias_h);
+
+        // Generating the hidden 1 outputs
+        let hidden1 = Matrix.multiply(this.weights_ih1, inputs);
+        hidden1.add(this.bias_h1);
         // activation function!
-        hidden.map(this.activation_function.func);
+        hidden1.map(this.activation_function.func);
+
+        // Generating the hidden 2 outputs
+        let hidden2 = Matrix.multiply(this.weights_h1h2, inputs);
+        hidden2.add(this.bias_h2);
+        // activation function!
+        hidden2.map(this.activation_function.func);
 
         // Generating the output's output!
-        let outputs = Matrix.multiply(this.weights_ho, hidden);
+        let outputs = Matrix.multiply(this.weights_h2o, hidden2);
         outputs.add(this.bias_o);
         outputs.map(this.activation_function.func);
 
@@ -100,38 +118,36 @@ class NeuralNetwork {
         // ERROR = TARGETS - OUTPUTS
         let output_errors = Matrix.subtract(targets, outputs);
 
-        // let gradient = outputs * (1 - outputs);
         // Calculate gradient
         let gradients = Matrix.map(outputs, this.activation_function.dfunc);
         gradients.multiply(output_errors);
         gradients.multiply(this.learning_rate);
 
-
         // Calculate deltas
-        let hidden_T = Matrix.transpose(hidden);
-        let weight_ho_deltas = Matrix.multiply(gradients, hidden_T);
+        let hidden2_T = Matrix.transpose(hidden2);
+        let weight_h2o_deltas = Matrix.multiply(gradients, hidden2_T);
 
         // Adjust the weights by deltas
-        this.weights_ho.add(weight_ho_deltas);
+        this.weights_h2o.add(weight_h2o_deltas);
         // Adjust the bias by its deltas (which is just the gradients)
         this.bias_o.add(gradients);
 
         // Calculate the hidden layer errors
-        let who_t = Matrix.transpose(this.weights_ho);
-        let hidden_errors = Matrix.multiply(who_t, output_errors);
+        let wh2o_t = Matrix.transpose(this.weights_h2o);
+        let hidden2_errors = Matrix.multiply(wh2o_t, output_errors);
 
         // Calculate hidden gradient
-        let hidden_gradient = Matrix.map(hidden, this.activation_function.dfunc);
-        hidden_gradient.multiply(hidden_errors);
-        hidden_gradient.multiply(this.learning_rate);
+        let hidden2_gradient = Matrix.map(hidden2, this.activation_function.dfunc);
+        hidden2_gradient.multiply(hidden2_errors);
+        hidden2_gradient.multiply(this.learning_rate);
 
         // Calcuate input->hidden deltas
         let inputs_T = Matrix.transpose(inputs);
-        let weight_ih_deltas = Matrix.multiply(hidden_gradient, inputs_T);
+        let weight_ih1_deltas = Matrix.multiply(hidden2_gradient, inputs_T);
 
-        this.weights_ih.add(weight_ih_deltas);
+        this.weights_ih1.add(weight_ih1_deltas);
         // Adjust the bias by its deltas (which is just the gradients)
-        this.bias_h.add(hidden_gradient);
+        this.bias_h1.add(hidden2_gradient);
 
         // outputs.print();
         // targets.print();
@@ -146,15 +162,16 @@ class NeuralNetwork {
         if (typeof data == 'string') {
             data = JSON.parse(data);
         }
-        let nn = new NeuralNetwork(data.input_nodes, data.hidden_nodes, data.output_nodes);
-        nn.weights_ih = Matrix.deserialize(data.weights_ih);
-        nn.weights_ho = Matrix.deserialize(data.weights_ho);
-        nn.bias_h = Matrix.deserialize(data.bias_h);
+        let nn = new NeuralNetwork(data.input_nodes, data.hidden_nodes, data.output_nodes, data.second_hidden);
+        nn.weights_ih1 = Matrix.deserialize(data.weights_ih1);
+        nn.weights_h1h2 = Matrix.deserialize(data.weights_h1h2);
+        nn.weights_h2o = Matrix.deserialize(data.weights_h2o);
+        nn.bias_h1 = Matrix.deserialize(data.bias_h1);
+        nn.bias_h2 = Matrix.deserialize(data.bias_h2);
         nn.bias_o = Matrix.deserialize(data.bias_o);
         nn.learning_rate = data.learning_rate;
         return nn;
     }
-
 
     // Adding function for neuro-evolution
     copy() {
@@ -170,12 +187,11 @@ class NeuralNetwork {
                 return val;
             }
         }
-        this.weights_ih.map(mutate);
-        this.weights_ho.map(mutate);
-        this.bias_h.map(mutate);
+        this.weights_ih1.map(mutate);
+        this.weights_h1h2.map(mutate);
+        this.weights_h2o.map(mutate);
+        this.bias_h1.map(mutate);
+        this.bias_h2.map(mutate);
         this.bias_o.map(mutate);
     }
-
-
-
 }
