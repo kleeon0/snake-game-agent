@@ -16,12 +16,12 @@ let tanh = new ActivationFunction(
     y => 1 - (y * y)
 );
 
-class NeuralNetwork {
+class OldNeuralNetwork {
     // a is the number of input nodes
     // b is the number of nodes in the hidden layer (there is only one hidden layer)
     // c is the number of output nodes
     constructor(a, b, c, d) {
-        if (a instanceof NeuralNetwork) {
+        if (a instanceof OldNeuralNetwork) {
             this.input_nodes = a.input_nodes;
             this.hidden_nodes = a.hidden_nodes;
             this.second_hidden =a.second_hidden;
@@ -162,7 +162,7 @@ class NeuralNetwork {
         if (typeof data == 'string') {
             data = JSON.parse(data);
         }
-        let nn = new NeuralNetwork(data.input_nodes, data.hidden_nodes, data.output_nodes, data.second_hidden);
+        let nn = new OldNeuralNetwork(data.input_nodes, data.hidden_nodes, data.output_nodes, data.second_hidden);
         nn.weights_ih1 = Matrix.deserialize(data.weights_ih1);
         nn.weights_h1h2 = Matrix.deserialize(data.weights_h1h2);
         nn.weights_h2o = Matrix.deserialize(data.weights_h2o);
@@ -175,7 +175,7 @@ class NeuralNetwork {
 
     // Adding function for neuro-evolution
     copy() {
-        return new NeuralNetwork(this);
+        return new OldNeuralNetwork(this);
     }
 
     mutate(rate) {

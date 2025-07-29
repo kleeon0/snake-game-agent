@@ -37,7 +37,8 @@ class Snake {
             //      16 nodes in a single layer (constrained by the neural network configuration we're using)
             // output nodes:
             //      up, down, left, right
-            this.brain = new NeuralNetwork(9, 16, 4);
+            // this.brain = new OldNeuralNetwork(9, 16, 4);
+            this.brain = new NeuralNetwork(1, 1);
         }
     }
 
